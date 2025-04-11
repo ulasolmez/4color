@@ -9,35 +9,49 @@ import androidx.appcompat.app.AppCompatActivity;
 
 // LevelSelectActivity.java
 public class LevelSelectActivity extends AppCompatActivity {
+    private static final int TOTAL_LEVELS = 20;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_level_select);
 
         GridLayout levelGrid = findViewById(R.id.levelGrid);
-        int totalLevels = 21; // Change this to your number of levels
+        levelGrid.setColumnCount(5); // 5 columns
 
-        for (int i = 1; i <= totalLevels; i++) {
+        for (int i = 1; i <= TOTAL_LEVELS; i++) {
             Button levelButton = new Button(this);
-            levelButton.setText(String.valueOf(i));
-            levelButton.setTextSize(18);
-            levelButton.setPadding(20, 50, 20, 50);
+            final int levelNumber = i; // Create final copy for lambda
 
+
+            // Style and text (unchanged)
+            styleLevelButton(levelButton, levelNumber);
+            levelButton.setText(String.valueOf(levelNumber));
+
+            // Use the final copy in the lambda
+            levelButton.setOnClickListener(v -> startLevel(levelNumber));
+
+            // Layout params (unchanged)
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = GridLayout.LayoutParams.WRAP_CONTENT;
-            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-            params.setMargins(16, 16, 16, 16);
+            params.width = dpToPx(60);
+            params.height = dpToPx(60);
+            params.setMargins(dpToPx(8), dpToPx(8), dpToPx(8), dpToPx(8));
 
-            levelButton.setLayoutParams(params);
-
-            final int levelNumber = i;
-            levelButton.setOnClickListener(v -> {
-                Intent intent = new Intent(LevelSelectActivity.this, GraphColoringActivity.class);
-                intent.putExtra("LEVEL_NUMBER", levelNumber);
-                startActivity(intent);
-            });
-
-            levelGrid.addView(levelButton);
+            levelGrid.addView(levelButton, params);
         }
+    }
+
+    private void startLevel(int levelNumber) {
+        startActivity(new Intent(this, GraphColoringActivity.class)
+                .putExtra("LEVEL_NUMBER", levelNumber));
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density);
+    }
+
+    private void styleLevelButton(Button button, int level) {
+        // Implement your styling logic here
+        // For example, change color based on completion status
     }
 }

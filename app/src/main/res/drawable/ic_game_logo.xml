@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Square Edges -->
+    <path android:pathData="M30,30 L90,30" android:strokeWidth="3" android:strokeColor="#FF000000"/>
+    <path android:pathData="M90,30 L90,90" android:strokeWidth="3" android:strokeColor="#FF000000"/>
+    <path android:pathData="M90,90 L30,90" android:strokeWidth="3" android:strokeColor="#FF000000"/>
+    <path android:pathData="M30,90 L30,30" android:strokeWidth="3" android:strokeColor="#FF000000"/>
+
+    <!-- Perfectly Centered Corner Circles -->
+    <group android:pivotX="30" android:pivotY="30">
+        <path android:pathData="M30,30 A15,15 0 1 1 30.1,30" android:fillColor="#FFFF0000"/>
+        <path android:pathData="M30,30 A15,15 0 1 1 30.1,30" android:strokeColor="#FF000000" android:strokeWidth="1.5"/>
+    </group>
+
+    <!-- Repeat for other 3 corners (90,30), (90,90), (30,90) -->
+</vector>

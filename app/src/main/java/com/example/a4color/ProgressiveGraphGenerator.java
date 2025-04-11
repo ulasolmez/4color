@@ -74,7 +74,7 @@ public class ProgressiveGraphGenerator {
                                                         int width,
                                                         int height ) {
         List<Edge> edges = new ArrayList<>();
-        Random random = new Random(level * 1000); // Seed for consistency
+        Random random = new Random(level * 1000L); // Seed for consistency
 
         // 1. Create base connections (ensures graph is planar and connected)
         for (int i = 1; i < nodes.size(); i++) {

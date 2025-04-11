@@ -31,6 +31,14 @@ import java.util.Stack;
 
 @SuppressLint("ViewConstructor")
 public class GameView extends View {
+    private static final int NODE_RADIUS = 40;
+    private static final int NODE_STROKE_WIDTH = 3;
+    private static final int EDGE_STROKE_WIDTH = 5;
+    private static final int[] COLORS = {
+            Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW
+    };
+    private static final String[] COLOR_NAMES = {"Red", "Green", "Blue", "Yellow"};
+
     private List<Node> nodes;
     private List<Edge> edges;
     private Paint nodePaint, edgePaint;
@@ -186,26 +194,15 @@ public class GameView extends View {
         return true;
     }
     private void showColorPicker() {
-        // Ensure we have an activity context
         Context context = getContext();
-        if (!(context instanceof Activity)) {
-            return;
-        }
+        if (!(context instanceof Activity)) return;
 
-        // Create color options (using standard Material Design colors)
-        final int[] colors = {
-                Color.RED,    // 0
-                Color.GREEN,  // 1
-                Color.BLUE,   // 2
-                Color.YELLOW // 3
-        };
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context)
                 .setTitle("Choose a Color")
-                .setItems(new String[]{"Red", "Green", "Blue", "Yellow"}, (dialog, which) -> {
+                .setAdapter(new ColorArrayAdapter(context, COLOR_NAMES), (dialog, which) -> {
                     if (selectedNode != null) {
-                        int chosenColor = colors[which];
+                        int chosenColor = COLORS[which];
                         if (isValidColor(selectedNode, chosenColor)) {
-                            // UNDO FUNCTIONALITY ADDED HERE
                             undoStack.push(new ColorAction(selectedNode, selectedNode.getColor()));
                             selectedNode.setColor(chosenColor);
                             invalidate();
@@ -217,59 +214,25 @@ public class GameView extends View {
                         }
                     }
                 })
-                // ADD UNDO BUTTON HERE
                 .setNeutralButton("Undo", (dialog, which) -> undoLastColor())
                 .setNegativeButton("Cancel", null);
 
+        builder.show();
+    }
+    private class ColorArrayAdapter extends ArrayAdapter<String> {
+        ColorArrayAdapter(Context context, String[] colors) {
+            super(context, android.R.layout.simple_list_item_1, colors);
+        }
 
-        // Create dialog using MaterialAlertDialogBuilder for better theming
-   /*     MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context)
-                .setTitle("Choose a Color")
-                .setItems(new String[]{"Red", "Green", "Blue", "Yellow"},
-                        (dialog, which) -> {
-                            if (selectedNode != null) {
-                                int chosenColor = colors[which];
-                                if (isValidColor(selectedNode, chosenColor)) {
-                                    selectedNode.setColor(chosenColor);
-                                    invalidate(); // Redraw the view
-                                    checkWinCondition();
-                                } else {
-                                    Toast.makeText(context,
-                                            "Adjacent nodes can't have the same color!",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        })
-                .setNegativeButton("Cancel", null);
-                */
-
-
-        // Show the dialog
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        // Optional: Add color preview indicators
-        ListView listView = dialog.getListView();
-        if (listView != null) {
-            listView.setAdapter(new ArrayAdapter<>(
-                    context,
-                    android.R.layout.simple_list_item_1,
-                    new String[]{"Red", "Green", "Blue", "Yellow"}
-            ) {
-                @NonNull
-                @Override
-                public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                    View view = super.getView(position, convertView, parent);
-                    // Add color indicator
-                    ImageView indicator = new ImageView(context);
-                    indicator.setImageDrawable(new ColorDrawable(colors[position]));
-                    indicator.setPadding(0, 0, 30, 0);
-
-                    ((TextView) view).setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            indicator.getDrawable(), null, null, null);
-                    return view;
-                }
-            });
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            View view = super.getView(position, convertView, parent);
+            TextView textView = (TextView) view;
+            textView.setCompoundDrawablesWithIntrinsicBounds(
+                    new ColorDrawable(COLORS[position]), null, null, null);
+            textView.setCompoundDrawablePadding(30);
+            return view;
         }
     }
 
@@ -279,50 +242,45 @@ public class GameView extends View {
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
-
-        // Set background
-        canvas.drawColor(Color.rgb(255,255,204));
+        canvas.drawColor(Color.rgb(255, 255, 204)); // Light yellow background
 
         // Draw edges first
         edgePaint.setColor(Color.BLACK);
-        edgePaint.setStrokeWidth(5f);
+        edgePaint.setStrokeWidth(EDGE_STROKE_WIDTH);
         for (Edge edge : edges) {
-
             canvas.drawLine(
                     edge.getStart().getPosition().x,
                     edge.getStart().getPosition().y,
                     edge.getEnd().getPosition().x,
                     edge.getEnd().getPosition().y,
                     edgePaint
-
             );
         }
 
         // Draw nodes
-        nodePaint.setStyle(Paint.Style.FILL);
         for (Node node : nodes) {
+            // Fill
             nodePaint.setColor(node.getColor());
             canvas.drawCircle(
                     node.getPosition().x,
                     node.getPosition().y,
-                    40,  // Radius in pixels
+                    NODE_RADIUS,
                     nodePaint
             );
 
-            // Add stroke border
+            // Border
             nodePaint.setStyle(Paint.Style.STROKE);
             nodePaint.setColor(Color.BLACK);
-            nodePaint.setStrokeWidth(3f);
+            nodePaint.setStrokeWidth(NODE_STROKE_WIDTH);
             canvas.drawCircle(
                     node.getPosition().x,
                     node.getPosition().y,
-                    40,
+                    NODE_RADIUS,
                     nodePaint
             );
             nodePaint.setStyle(Paint.Style.FILL);
         }
     }
-
 
 
     @SuppressLint("ClickableViewAccessibility")

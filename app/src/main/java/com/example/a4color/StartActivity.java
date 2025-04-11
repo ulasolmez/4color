@@ -6,6 +6,8 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 // StartActivity.java
 public class StartActivity extends AppCompatActivity {
     @Override
@@ -14,9 +16,21 @@ public class StartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start);
 
         Button startButton = findViewById(R.id.startButton);
+        Button howToPlayButton = findViewById(R.id.howToPlayButton);
+
         startButton.setOnClickListener(v -> {
-            Intent intent = new Intent(StartActivity.this, LevelSelectActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, LevelSelectActivity.class));
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
+
+        howToPlayButton.setOnClickListener(v -> showHowToPlayDialog());
+    }
+
+    private void showHowToPlayDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("How to Play")
+                .setMessage("Color all regions so that no two adjacent regions have the same color. Use only four colors!")
+                .setPositiveButton("OK", null)
+                .show();
     }
 }

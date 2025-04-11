@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Node {
+    public static final int DEFAULT_COLOR = Color.WHITE;
+    public static final int[] POSSIBLE_COLORS = {
+            Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW
+    };
     private int id;
     private PointF position;
     private int color;
@@ -14,8 +18,16 @@ public class Node {
     public Node(int id, float x, float y) {
         this.id = id;
         this.position = new PointF(x, y);
-        this.color = Color.WHITE;
+        this.color = DEFAULT_COLOR;
         this.neighbors = new ArrayList<>();
+    }
+    public boolean canAcceptColor(int newColor) {
+        for (Node neighbor : neighbors) {
+            if (neighbor.getColor() == newColor) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Get list of adjacent nodes

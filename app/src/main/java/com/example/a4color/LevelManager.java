@@ -5,20 +5,32 @@ import android.graphics.PointF;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class LevelManager {
 
-
+    private static final int[] NODE_COUNTS = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    private static final float[] EDGE_DENSITIES = {1.2f, 1.3f, 1.4f, 1.5f, 1.6f, 1.7f,
+            1.8f, 1.9f, 2.0f, 2.1f, 2.2f, 2.3f};
     private static List<Level> levels;
     private static int currentLevelIndex = 0;
-    private int screenWidth, screenHeight;
+    private final int screenWidth;
+    private final int screenHeight;
 
     public LevelManager(int width, int height) {
         this.screenWidth = width;
         this.screenHeight = height;
-        this.levels = new ArrayList<>();
+        levels = new ArrayList<>();
         generateLevels();
+    }
+    public static int getCurrentLevelIndex() {
+        return currentLevelIndex;
+    }
+    public static void setCurrentLevel(int levelIndex) {
+        if (levelIndex >= 0 && levelIndex < levels.size()) {
+            currentLevelIndex = levelIndex;
+        }
     }
 
     private void generateLevels() {
@@ -29,36 +41,49 @@ public class LevelManager {
     }
 
     private Level generateLevel(int levelNumber) {
-        // Simplified progressive generation
-        int baseNodes = 4 + (levelNumber / 3);
-        int nodes = Math.min(baseNodes, 15); // Cap at 15 nodes
-        int edges = nodes + (levelNumber*3 / 4); // Progressive edge count
+        int levelIndex = Math.min(levelNumber, NODE_COUNTS.length - 1);
+        int nodeCount = NODE_COUNTS[levelIndex];
+        float edgeDensity = EDGE_DENSITIES[levelIndex];
 
-        List<Node> nodeList = new ArrayList<>();
-        List<Edge> edgeList = new ArrayList<>();
+        List<Node> nodes = createCircularLayout(nodeCount);
+        List<Edge> edges = createEdges(nodes, (int)(nodeCount * edgeDensity));
 
-        // Circular layout for consistency
+        return new Level(nodes, edges);
+    }
+    private List<Node> createCircularLayout(int nodeCount) {
+        List<Node> nodes = new ArrayList<>();
         float centerX = screenWidth / 2f;
         float centerY = screenHeight / 2f;
         float radius = Math.min(screenWidth, screenHeight) * 0.4f;
 
-        for (int i = 0; i < nodes; i++) {
-            double angle = 2 * Math.PI * i / nodes;
+        for (int i = 0; i < nodeCount; i++) {
+            double angle = 2 * Math.PI * i / nodeCount;
             float x = centerX + (float)(radius * Math.cos(angle));
             float y = centerY + (float)(radius * Math.sin(angle));
-            nodeList.add(new Node(i, x, y));
+            nodes.add(new Node(i, x, y));
+        }
+        return nodes;
+    }
+
+    private List<Edge> createEdges(List<Node> nodes, int targetEdges) {
+        List<Edge> edges = new ArrayList<>();
+        Random random = new Random();
+
+        // Ensure graph is connected
+        for (int i = 1; i < nodes.size(); i++) {
+            edges.add(new Edge(nodes.get(i-1), nodes.get(i)));
         }
 
-        // Connect nodes progressively
-        for (int i = 0; i < edges; i++) {
-            int from = i % nodes;
-            int to = (from + 1 + (i / nodes)) % nodes;
-            if (!hasEdge(edgeList, nodeList.get(from), nodeList.get(to))) {
-                edgeList.add(new Edge(nodeList.get(from), nodeList.get(to)));
+        // Add remaining edges randomly
+        while (edges.size() < targetEdges) {
+            Node a = nodes.get(random.nextInt(nodes.size()));
+            Node b = nodes.get(random.nextInt(nodes.size()));
+
+            if (a != b && !hasEdge(edges, a, b)) {
+                edges.add(new Edge(a, b));
             }
         }
-
-        return new Level(nodeList, edgeList);
+        return edges;
     }
 
     private boolean hasEdge(List<Edge> edges, Node a, Node b) {

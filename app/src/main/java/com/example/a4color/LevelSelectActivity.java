@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat;
 
 // LevelSelectActivity.java
 public class LevelSelectActivity extends AppCompatActivity {
-    private static final int TOTAL_LEVELS = 20;
+    private static final int TOTAL_LEVELS = 40;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

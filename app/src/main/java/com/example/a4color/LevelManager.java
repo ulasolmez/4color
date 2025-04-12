@@ -35,7 +35,7 @@ public class LevelManager {
 
     private void generateLevels() {
         // Generate 20 progressively harder levels
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 40; i++) {
             levels.add(generateLevel(i));
         }
     }

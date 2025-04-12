@@ -10,11 +10,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.ColorDrawable;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -241,8 +243,17 @@ public class GameView extends View {
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
+        Paint backgroundPaint = new Paint();
+        Shader gradient = new LinearGradient(
+                0, 0, getWidth(), getHeight(),
+                Color.parseColor("#FF6B6B"), Color.parseColor("#4ECDC4"),
+                Shader.TileMode.CLAMP
+        );
+        backgroundPaint.setShader(gradient);
+
+        canvas.drawRect(0, 0, getWidth(), getHeight(), backgroundPaint);
+
         super.onDraw(canvas);
-        canvas.drawColor(Color.rgb(255, 255, 204)); // Light yellow background
 
         // Draw edges first
         edgePaint.setColor(Color.BLACK);

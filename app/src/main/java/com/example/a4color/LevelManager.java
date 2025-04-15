@@ -36,6 +36,7 @@ public class LevelManager {
         generators.put("progressive", new ProgressiveGraphGenerator());
         generators.put("wheel", new WheelGraphGenerator());
         generators.put("triangular", new TriangularGraphGenerator());
+        generators.put("nested", new NestedTrianglesGenerator());
 
     }
 

@@ -11,7 +11,7 @@ import android.widget.Toast;
 public class GraphColoringActivity extends AppCompatActivity {
     private GameView gameView;
     private LevelManager levelManager;
-    private String currentGraphType = "triangular"; // Default generator type
+    private String currentGraphType = "nested"; // Default generator type
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

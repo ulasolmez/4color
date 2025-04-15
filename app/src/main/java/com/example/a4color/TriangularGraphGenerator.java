@@ -155,5 +155,5 @@ public class TriangularGraphGenerator implements LevelGenerator {
             }
         }
     }
-    
+
 }

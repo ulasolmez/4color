@@ -33,6 +33,7 @@ import java.util.Stack;
 
 @SuppressLint("ViewConstructor")
 public class GameView extends View {
+    private Level currentLevel;
     private static final int NODE_RADIUS = 40;
     private static final int NODE_STROKE_WIDTH = 3;
     private static final int EDGE_STROKE_WIDTH = 5;
@@ -51,6 +52,7 @@ public class GameView extends View {
 
     public GameView(Context context, Level level) {
         super(context);
+        this.currentLevel = level;
         setFocusable(true);
         setFocusableInTouchMode(true);
         // In GameView initialization
@@ -68,6 +70,14 @@ public class GameView extends View {
         for (Node node : nodes) {
             Log.d("GAME_VIEW", "Node position: " + node.getPosition());
         }
+    }
+
+    public void setLevel(Level newLevel) {
+        this.currentLevel = newLevel;
+        this.nodes = newLevel.getNodes();
+        this.edges = newLevel.getEdges();
+        initializeNeighbors(); // Add this line
+        invalidate();
     }
 
     private class ColorAction {
@@ -153,6 +163,7 @@ public class GameView extends View {
     private void loadLevel(Level level) {
         this.nodes = level.getNodes();
         this.edges = level.getEdges();
+        initializeNeighbors(); // Add this line
         resetLevel(); // Clear all colors
     }
 
@@ -177,19 +188,45 @@ public class GameView extends View {
         showWinDialog();
     }
 
+    private void initializeNeighbors() {
+        // Clear existing neighbors
+        for (Node node : nodes) {
+            node.getNeighbors().clear();
+        }
+
+        // Establish neighbor relationships from edges
+        for (Edge edge : edges) {
+            Node start = edge.getStart();
+            Node end = edge.getEnd();
+
+            if (start != end) {  // Prevent self-neighbors
+                if (!start.getNeighbors().contains(end)) {
+                    start.getNeighbors().add(end);
+                }
+                if (!end.getNeighbors().contains(start)) {
+                    end.getNeighbors().add(start);
+                }
+            }
+        }
+
+    }
+
     private boolean isValidColor(Node node, int newColor) {
         // Check if color is one of the allowed colors
-        if (newColor != Color.RED &&
-                newColor != Color.GREEN &&
-                newColor != Color.BLUE &&
-                newColor != Color.YELLOW &&
-                newColor != Color.TRANSPARENT) {
+        boolean validColor = false;
+        for (int allowedColor : COLORS) {
+            if (newColor == allowedColor) {
+                validColor = true;
+                break;
+            }
+        }
+        if (!validColor) {
             return false;
         }
 
-        // Check adjacent nodes
+        // Check adjacent nodes (skip self)
         for (Node neighbor : node.getNeighbors()) {
-            if (neighbor.getColor() == newColor) {
+            if (neighbor != node && neighbor.getColor() == newColor) {
                 return false;
             }
         }

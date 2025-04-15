@@ -3,8 +3,10 @@ package com.example.a4color;
 import android.graphics.PointF;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -17,12 +19,32 @@ public class LevelManager {
     private static int currentLevelIndex = 0;
     private final int screenWidth;
     private final int screenHeight;
+    private Map<String, LevelGenerator> generators;
+    private String currentGeneratorType = "progressive";
 
     public LevelManager(int width, int height) {
         this.screenWidth = width;
         this.screenHeight = height;
         levels = new ArrayList<>();
+        initializeGenerators();
         generateLevels();
+    }
+
+    private void initializeGenerators() {
+
+        generators = new HashMap<>();
+        generators.put("progressive", new ProgressiveGraphGenerator());
+        generators.put("wheel", new WheelGraphGenerator());
+
+    }
+
+    void setGeneratorType(String generatorType) {
+
+        if (generators.containsKey(generatorType)) {
+            this.currentGeneratorType = generatorType;
+            generateLevels();
+        }
+
     }
     public static int getCurrentLevelIndex() {
         return currentLevelIndex;
@@ -34,9 +56,12 @@ public class LevelManager {
     }
 
     private void generateLevels() {
-        // Generate 20 progressively harder levels
+        levels.clear();
+        LevelGenerator generator = generators.get(currentGeneratorType);
+
         for (int i = 0; i < 40; i++) {
-            levels.add(generateLevel(i));
+            assert generator != null;
+            levels.add(generator.generateLevel(i, screenWidth, screenHeight));
         }
     }
 
@@ -60,11 +85,25 @@ public class LevelManager {
             double angle = 2 * Math.PI * i / nodeCount;
             float x = centerX + (float)(radius * Math.cos(angle));
             float y = centerY + (float)(radius * Math.sin(angle));
-            nodes.add(new Node(i, x, y));
+
+            // Ensure no duplicate positions
+            PointF newPos = new PointF(x, y);
+            if (!positionExists(nodes, newPos)) {
+                nodes.add(new Node(i, x, y));
+            }
         }
         return nodes;
     }
-
+    private boolean positionExists(List<Node> nodes, PointF position) {
+        final float TOLERANCE = 1.0f; // pixels
+        for (Node node : nodes) {
+            if (Math.abs(node.getPosition().x - position.x) < TOLERANCE &&
+                    Math.abs(node.getPosition().y - position.y) < TOLERANCE) {
+                return true;
+            }
+        }
+        return false;
+    }
     private List<Edge> createEdges(List<Node> nodes, int targetEdges) {
         List<Edge> edges = new ArrayList<>();
         Random random = new Random();
@@ -79,9 +118,9 @@ public class LevelManager {
             Node a = nodes.get(random.nextInt(nodes.size()));
             Node b = nodes.get(random.nextInt(nodes.size()));
 
-            if (a != b && !hasEdge(edges, a, b)) {
-                edges.add(new Edge(a, b));
-            }
+            if (a == b || hasEdge(edges, a, b)) continue;
+
+            edges.add(new Edge(a, b));
         }
         return edges;
     }

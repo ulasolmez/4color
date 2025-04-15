@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class ProgressiveGraphGenerator {
+public class ProgressiveGraphGenerator implements LevelGenerator{
     private static final int BASE_NODES = 4;
     private static final float COMPLEXITY_FACTOR = 1.3f;
-
-    public static Level generateLevel(int levelNumber, int width, int height) {
+    @Override
+    public Level generateLevel(int levelNumber, int width, int height) {
         int targetNodes = BASE_NODES + (int)(levelNumber * COMPLEXITY_FACTOR);
         int targetEdges = calculateTargetEdges(levelNumber, targetNodes);
 

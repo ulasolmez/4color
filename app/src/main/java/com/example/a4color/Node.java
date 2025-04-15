@@ -10,16 +10,16 @@ public class Node {
     public static final int[] POSSIBLE_COLORS = {
             Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW
     };
-    private int id;
-    private PointF position;
+    private final int id;
+    private final PointF position;
     private int color;
-    private List<Node> neighbors;
+    private final List<Node> neighbors = new ArrayList<>();
 
     public Node(int id, float x, float y) {
         this.id = id;
         this.position = new PointF(x, y);
         this.color = DEFAULT_COLOR;
-        this.neighbors = new ArrayList<>();
+
     }
     public boolean canAcceptColor(int newColor) {
         for (Node neighbor : neighbors) {

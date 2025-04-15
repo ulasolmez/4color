@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,25 +8,90 @@
     android:layout_height="match_parent"
     android:background="@drawable/graph_bg_gradient"
     tools:context=".GraphColoringActivity">
+
     <com.example.a4color.GameView
         android:id="@+id/gameView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <!-- Main Palette FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_palette"
+        app:backgroundTint="#6200EE"/>
+
+    <!-- Color FABs (initially hidden) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_color1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:backgroundTint="#FF5252"
+        app:layout_constraintBottom_toTopOf="@id/fab_main"
+        app:layout_constraintEnd_toEndOf="@id/fab_main"
+        app:srcCompat="@drawable/ic_check"
+        android:contentDescription="@string/color_red"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_color2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:backgroundTint="#4CAF50"
+        app:layout_constraintBottom_toTopOf="@id/fab_color1"
+        app:layout_constraintEnd_toEndOf="@id/fab_main"
+        app:srcCompat="@drawable/ic_check"
+        android:contentDescription="@string/color_green"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_color3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:backgroundTint="#2196F3"
+        app:layout_constraintBottom_toTopOf="@id/fab_color2"
+        app:layout_constraintEnd_toEndOf="@id/fab_main"
+        app:srcCompat="@drawable/ic_check"
+        android:contentDescription="@string/color_blue"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_color4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="invisible"
+        app:backgroundTint="#FFC107"
+        app:layout_constraintBottom_toTopOf="@id/fab_color3"
+        app:layout_constraintEnd_toEndOf="@id/fab_main"
+        app:srcCompat="@drawable/ic_check"
+        android:contentDescription="@string/color_yellow"/>
+
+    <!-- Undo Button -->
     <Button
         android:id="@+id/undoButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="Undo"
-        android:onClick="onUndoClicked"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:layout_marginBottom="24dp"
+        android:text="@string/undo"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toStartOf="@id/fab_main"
+        android:onClick="onUndoClicked"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

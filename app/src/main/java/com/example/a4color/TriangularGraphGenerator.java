@@ -12,8 +12,8 @@ public class TriangularGraphGenerator implements LevelGenerator {
     @Override
     public Level generateLevel(int levelNumber, int width, int height) {
         // Calculate graph size based on level
-        int nodeCount = BASE_SIZE + (int)(levelNumber * 0.7);
-        nodeCount = Math.min(nodeCount, 15); // Cap at 15 nodes
+        int nodeCount = BASE_SIZE + (levelNumber);
+        nodeCount = Math.min(nodeCount, 28); // Cap at 15 nodes
 
         List<Node> nodes = createTriangularNodes(nodeCount, width, height);
         List<Edge> edges = createTriangularEdges(nodes);
@@ -57,58 +57,103 @@ public class TriangularGraphGenerator implements LevelGenerator {
         List<Edge> edges = new ArrayList<>();
         if (nodes.size() < 2) return edges;
 
-        // Connect nodes in triangular pattern
-        int[] rowStartIndices = calculateRowStarts(nodes.size());
+        // Calculate row information
+        int[] rowInfo = calculateRowInfo(nodes.size());
+        int totalRows = rowInfo.length;
 
-        for (int row = 0; row < rowStartIndices.length - 1; row++) {
-            int start = rowStartIndices[row];
-            int nextRowStart = rowStartIndices[row + 1];
+        for (int row = 0; row < totalRows; row++) {
+            int startIndex = rowInfo[row];
             int nodesInRow = row + 1;
+            int nextRowStart = (row < totalRows - 1) ? rowInfo[row + 1] : -1;
 
-            for (int pos = 0; pos < nodesInRow; pos++) {
-                int current = start + pos;
-                if (current >= nodes.size()) continue;
+            for (int posInRow = 0; posInRow < nodesInRow; posInRow++) {
+                int currentIndex = startIndex + posInRow;
+                if (currentIndex >= nodes.size()) continue;
 
-                // Connect to neighbor in same row
-                if (pos < nodesInRow - 1 && (start + pos + 1) < nodes.size()) {
-                    edges.add(new Edge(nodes.get(current), nodes.get(current + 1)));
+                // Connect to right neighbor in same row
+                if (posInRow < nodesInRow - 1) {
+                    int rightIndex = currentIndex + 1;
+                    if (rightIndex < nodes.size() && rightIndex < startIndex + nodesInRow) {
+                        addEdgeIfNotExists(edges, nodes.get(currentIndex), nodes.get(rightIndex));
+                    }
                 }
 
-                // Connect to nodes below
-                if (row < rowStartIndices.length - 2) {
-                    int belowLeft = nextRowStart + pos;
-                    int belowRight = belowLeft + 1;
-
-                    if (belowLeft < nodes.size()) {
-                        edges.add(new Edge(nodes.get(current), nodes.get(belowLeft)));
+                // Connect to nodes below (left and right children)
+                if (nextRowStart != -1) {
+                    // Left child below
+                    int leftChildIndex = nextRowStart + posInRow;
+                    if (leftChildIndex < nodes.size()) {
+                        addEdgeIfNotExists(edges, nodes.get(currentIndex), nodes.get(leftChildIndex));
                     }
-                    if (belowRight < nodes.size()) {
-                        edges.add(new Edge(nodes.get(current), nodes.get(belowRight)));
+
+                    // Right child below
+                    int rightChildIndex = leftChildIndex + 1;
+                    if (rightChildIndex < nodes.size() &&
+                            rightChildIndex < nextRowStart + (row + 2)) { // Stay within next row
+                        addEdgeIfNotExists(edges, nodes.get(currentIndex), nodes.get(rightChildIndex));
                     }
                 }
             }
         }
 
+        // Ensure all nodes are connected (for cases where we have partial rows)
+        ensureAllNodesConnected(nodes, edges);
+
         return edges;
     }
-
-    private int[] calculateRowStarts(int totalNodes) {
-        List<Integer> starts = new ArrayList<>();
+    private int[] calculateRowInfo(int totalNodes) {
+        List<Integer> rowStarts = new ArrayList<>();
         int accumulated = 0;
         int row = 0;
 
         while (accumulated < totalNodes) {
-            starts.add(accumulated);
+            rowStarts.add(accumulated);
             row++;
             accumulated += row;
         }
 
         // Convert to array
-        int[] result = new int[starts.size()];
+        int[] result = new int[rowStarts.size()];
         for (int i = 0; i < result.length; i++) {
-            result[i] = starts.get(i);
+            result[i] = rowStarts.get(i);
         }
 
         return result;
     }
+
+    private void addEdgeIfNotExists(List<Edge> edges, Node a, Node b) {
+        if (!hasEdge(edges, a, b)) {
+            edges.add(new Edge(a, b));
+        }
+    }
+
+    private boolean hasEdge(List<Edge> edges, Node a, Node b) {
+        for (Edge edge : edges) {
+            if ((edge.getStart().equals(a) && edge.getEnd().equals(b)) ||
+                    (edge.getStart().equals(b) && edge.getEnd().equals(a))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ensureAllNodesConnected(List<Node> nodes, List<Edge> edges) {
+        // Simple solution - connect orphan nodes to first node
+        boolean[] connected = new boolean[nodes.size()];
+
+        // Mark all nodes connected by edges
+        for (Edge edge : edges) {
+            connected[nodes.indexOf(edge.getStart())] = true;
+            connected[nodes.indexOf(edge.getEnd())] = true;
+        }
+
+        // Connect any unconnected nodes to the first node
+        Node firstNode = nodes.get(0);
+        for (int i = 1; i < nodes.size(); i++) {
+            if (!connected[i]) {
+                edges.add(new Edge(firstNode, nodes.get(i)));
+            }
+        }
+    }
+    
 }

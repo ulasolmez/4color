@@ -35,6 +35,8 @@ public class LevelManager {
         generators = new HashMap<>();
         generators.put("progressive", new ProgressiveGraphGenerator());
         generators.put("wheel", new WheelGraphGenerator());
+        generators.put("triangular", new TriangularGraphGenerator());
+        generators.put("new", new GraphGenerator());
 
     }
 

@@ -31,7 +31,7 @@ public class ProgressiveGraphGenerator implements LevelGenerator{
         float radius = Math.min(width, height) * 0.4f;
 
         // Different layouts based on level progression
-        if (level < 5) {
+
             // Circular layout for early levels
             for (int i = 0; i < count; i++) {
                 double angle = 2 * Math.PI * i / count;
@@ -39,32 +39,7 @@ public class ProgressiveGraphGenerator implements LevelGenerator{
                 float y = centerY + (float)(radius * Math.sin(angle));
                 nodes.add(new Node(i, x, y));
             }
-        } else if (level < 10) {
-            // Grid-like layout for mid levels
-            int cols = (int)Math.sqrt(count) + 1;
-            for (int i = 0; i < count; i++) {
-                float x = centerX - radius + (i % cols) * (2 * radius / cols);
-                float y = centerY - radius + (i / cols) * (2 * radius / cols);
-                nodes.add(new Node(i, x, y));
-            }
-        } else {
-            // Hybrid layout with clusters for advanced levels
-            int clusters = Math.max(2, level / 5);
-            int perCluster = count / clusters;
 
-            for (int c = 0; c < clusters; c++) {
-                float clusterRadius = radius * 0.6f;
-                float clusterX = centerX + (c % 2 == 0 ? -radius/3 : radius/3);
-                float clusterY = centerY + (c < 2 ? -radius/3 : radius/3);
-
-                for (int i = 0; i < perCluster; i++) {
-                    double angle = 2 * Math.PI * i / perCluster;
-                    float x = clusterX + (float)(clusterRadius * Math.cos(angle));
-                    float y = clusterY + (float)(clusterRadius * Math.sin(angle));
-                    nodes.add(new Node(c * perCluster + i, x, y));
-                }
-            }
-        }
         return nodes;
     }
 

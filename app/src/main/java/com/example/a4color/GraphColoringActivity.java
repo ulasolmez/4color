@@ -11,7 +11,7 @@ import android.widget.Toast;
 public class GraphColoringActivity extends AppCompatActivity {
     private GameView gameView;
     private LevelManager levelManager;
-    private String currentGraphType = "wheel"; // Default generator type
+    private String currentGraphType = "new"; // Default generator type
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +58,9 @@ public class GraphColoringActivity extends AppCompatActivity {
             case "wheel":
                 graphName = "Wheel Graph";
                 break;
-            // Add more cases as you add generators
+            case "triangular":
+                graphName = "Triangular Graph";
+                break;
             default:
                 graphName = "Special Graph";
         }

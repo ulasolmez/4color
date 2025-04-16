@@ -1,4 +1,5 @@
 package com.example.a4color;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -19,7 +20,9 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.ColorDrawable;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -33,6 +36,17 @@ import java.util.Stack;
 
 @SuppressLint("ViewConstructor")
 public class GameView extends View {
+    private static final int BASE_NODE_RADIUS = 40;
+    private static final float NODE_SCALE_FACTOR = 0.03f;
+    private static final float MIN_NODE_SCALE = 0.7f;
+    private static final float MAX_NODE_SCALE = 1.3f;
+    private ValueAnimator zoomAnimator;
+    private ScaleGestureDetector scaleDetector;
+    private GestureDetector gestureDetector;
+    private boolean isZooming = false;
+    private float zoomFactor = 1f;
+    private PointF viewOffset = new PointF(0, 0);
+    private PointF lastTouch = new PointF();
     private Level currentLevel;
     private static final int NODE_RADIUS = 40;
     private static final int NODE_STROKE_WIDTH = 3;
@@ -66,18 +80,38 @@ public class GameView extends View {
         this.nodes = level.getNodes();
         this.edges = level.getEdges();
 
-        // Debug: Print node positions
-        for (Node node : nodes) {
-            Log.d("GAME_VIEW", "Node position: " + node.getPosition());
-        }
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+        gestureDetector = new GestureDetector(context, new GestureListener());
+
+        adjustZoomForLevel();
+
     }
 
     public void setLevel(Level newLevel) {
         this.currentLevel = newLevel;
         this.nodes = newLevel.getNodes();
         this.edges = newLevel.getEdges();
-        initializeNeighbors(); // Add this line
+
+        // Auto-adjust view
+        adjustZoomForLevel();
+        initializeNeighbors();
         invalidate();
+    }
+
+
+
+    public void animateZoom(float targetZoom) {
+        if (zoomAnimator != null) {
+            zoomAnimator.cancel();
+        }
+
+        zoomAnimator = ValueAnimator.ofFloat(zoomFactor, targetZoom);
+        zoomAnimator.addUpdateListener(animation -> {
+            zoomFactor = (float) animation.getAnimatedValue();
+            invalidate();
+        });
+        zoomAnimator.setDuration(300);
+        zoomAnimator.start();
     }
 
     private class ColorAction {
@@ -110,6 +144,13 @@ public class GameView extends View {
         edgePaint.setStrokeWidth(3);
     }
 
+    private void drawBackground(Canvas canvas) {
+        // Draw non-scaled background
+        Paint bgPaint = new Paint();
+        bgPaint.setColor(Color.WHITE); // Or your background color/image
+        canvas.drawRect(0, 0, getWidth(), getHeight(), bgPaint);
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -135,27 +176,6 @@ public class GameView extends View {
                     invalidate();
                 })
                 .show();
-
-        /* Activity activity = (Activity) getContext();
-        if (activity == null || activity.isFinishing()) return;
-
-        new MaterialAlertDialogBuilder(getContext())
-                .setTitle("Congratulations!")
-                .setMessage("You've successfully colored the map!")
-                .setPositiveButton("Next Level", (dialog, which) -> {
-                    LevelManager.nextLevel();
-                    nodes = LevelManager.getCurrentLevel().getNodes();
-                    edges = LevelManager.getCurrentLevel().getEdges();
-                    invalidate();
-                })
-                .setNegativeButton("Replay", (dialog, which) -> {
-                    resetLevel();
-                    invalidate();
-                })
-                .setCancelable(false)
-                .show();
-
-        */
     }
 
 
@@ -279,77 +299,170 @@ public class GameView extends View {
 
 
     @Override
-    protected void onDraw(@NonNull Canvas canvas) {
-        Paint backgroundPaint = new Paint();
-        Shader gradient = new LinearGradient(
-                0, 0, getWidth(), getHeight(),
-                Color.parseColor("#FF6B6B"), Color.parseColor("#4ECDC4"),
-                Shader.TileMode.CLAMP
-        );
-        backgroundPaint.setShader(gradient);
+    protected void onDraw(Canvas canvas) {
+        // Draw background FIRST without any transformations
+        drawBackground(canvas);
 
-        canvas.drawRect(0, 0, getWidth(), getHeight(), backgroundPaint);
+        // Apply zoom/pan transformations only to game elements
+        canvas.save();
+        canvas.translate(viewOffset.x, viewOffset.y);
+        canvas.scale(zoomFactor, zoomFactor);
 
-        super.onDraw(canvas);
-
-        // Draw edges first
-        edgePaint.setColor(Color.BLACK);
-        edgePaint.setStrokeWidth(EDGE_STROKE_WIDTH);
+        // Draw edges with transformed coordinates
         for (Edge edge : edges) {
-            canvas.drawLine(
-                    edge.getStart().getPosition().x,
-                    edge.getStart().getPosition().y,
-                    edge.getEnd().getPosition().x,
-                    edge.getEnd().getPosition().y,
-                    edgePaint
-            );
+            PointF start = edge.getStart().getPosition();
+            PointF end = edge.getEnd().getPosition();
+            canvas.drawLine(start.x, start.y, end.x, end.y, edgePaint);
         }
 
-        // Draw nodes
+        // Draw nodes with level-appropriate sizing
+        float nodeScale = calculateNodeScale();
         for (Node node : nodes) {
-            // Fill
-            nodePaint.setColor(node.getColor());
-            canvas.drawCircle(
-                    node.getPosition().x,
-                    node.getPosition().y,
-                    NODE_RADIUS,
-                    nodePaint
-            );
+            PointF pos = node.getPosition();
+            float radius = BASE_NODE_RADIUS * nodeScale;
 
-            // Border
+            // Node fill
+            nodePaint.setColor(node.getColor());
+            canvas.drawCircle(pos.x, pos.y, radius, nodePaint);
+
+            // Node border
             nodePaint.setStyle(Paint.Style.STROKE);
             nodePaint.setColor(Color.BLACK);
-            nodePaint.setStrokeWidth(NODE_STROKE_WIDTH);
-            canvas.drawCircle(
-                    node.getPosition().x,
-                    node.getPosition().y,
-                    NODE_RADIUS,
-                    nodePaint
-            );
+            canvas.drawCircle(pos.x, pos.y, radius, nodePaint);
             nodePaint.setStyle(Paint.Style.FILL);
         }
+
+        canvas.restore(); // Restore canvas state
+
+        // Draw UI elements (like zoom percentage)
+        drawUIOverlay(canvas);
+    }
+
+    private void drawUIOverlay(Canvas canvas) {
+        // Draw zoom percentage
+        Paint textPaint = new Paint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(40);
+        canvas.drawText(String.format("%d%%", (int)(zoomFactor*100)), 20, 50, textPaint);
+    }
+
+    private float calculateNodeScale() {
+        int nodeCount = currentLevel.getNodes().size();
+        // Scale nodes smaller as level complexity increases
+        float scale = 1.0f - (nodeCount - 4) * NODE_SCALE_FACTOR;
+        return Math.max(MIN_NODE_SCALE, Math.min(scale, MAX_NODE_SCALE));
+    }
+
+    private float getDynamicNodeRadius() {
+        // Combine level-based scaling with zoom scaling
+        return BASE_NODE_RADIUS * calculateNodeScale() * (1.0f / zoomFactor);
+    }
+
+    private void adjustZoomForLevel() {
+        int nodeCount = currentLevel.getNodes().size();
+
+        // More nodes = zoom out more
+        zoomFactor = 1.0f - (nodeCount - 4) * 0.03f;
+        zoomFactor = Math.max(0.6f, Math.min(zoomFactor, 1.2f));
+
+        // Center the view
+        if (getWidth() > 0 && getHeight() > 0) {
+            viewOffset.set(
+                    (getWidth() - getWidth() * zoomFactor) / 2,
+                    (getHeight() - getHeight() * zoomFactor) / 2
+            );
+        }
+
+        invalidate();
     }
 
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+        scaleDetector.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
+
+        // Only handle node selection if not zooming/panning
+        if (!isZooming && event.getAction() == MotionEvent.ACTION_DOWN) {
+            // Convert screen coordinates to game coordinates
+            float gameX = (event.getX() - viewOffset.x) / zoomFactor;
+            float gameY = (event.getY() - viewOffset.y) / zoomFactor;
+
             for (Node node : nodes) {
-                if (isTouchOnNode(event.getX(), event.getY(), node)) {
+                if (isTouchOnNode(gameX, gameY, node)) {
                     selectedNode = node;
                     showColorPicker();
                     return true;
                 }
             }
         }
-        return super.onTouchEvent(event);
+        return true;
+    }
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            isZooming = true;
+            return true;
+        }
+
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            float scaleFactor = detector.getScaleFactor();
+            zoomFactor *= scaleFactor;
+            zoomFactor = Math.max(0.5f, Math.min(zoomFactor, 3.0f)); // Limit zoom range
+
+            // Adjust view offset to zoom toward pinch center
+            viewOffset.x = detector.getFocusX() - (detector.getFocusX() - viewOffset.x) * scaleFactor;
+            viewOffset.y = detector.getFocusY() - (detector.getFocusY() - viewOffset.y) * scaleFactor;
+
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+            isZooming = false;
+        }
     }
 
-    private boolean isTouchOnNode(float x, float y, Node node) {
-        return Math.hypot(x - node.getPosition().x,
-                y - node.getPosition().y) < 30;
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            if (!isZooming) {
+                viewOffset.x -= distanceX;
+                viewOffset.y -= distanceY;
+                invalidate();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            // Reset zoom on double tap
+            zoomFactor = 1f;
+            viewOffset.set(0, 0);
+            invalidate();
+            return true;
+        }
     }
+
+    private boolean isTouchOnNode(float touchX, float touchY, Node node) {
+        PointF pos = node.getPosition();
+        float radius = getDynamicNodeRadius();
+        return Math.hypot(touchX - pos.x, touchY - pos.y) < radius;
+    }
+
+    private void validateViewOffset() {
+        float scaledWidth = getWidth() * zoomFactor;
+        float scaledHeight = getHeight() * zoomFactor;
+
+        viewOffset.x = Math.min(0, Math.max(viewOffset.x, getWidth() - scaledWidth));
+        viewOffset.y = Math.min(0, Math.max(viewOffset.y, getHeight() - scaledHeight));
+    }
+
+
 
     public int getSelectedColor() {
         return selectedColor;

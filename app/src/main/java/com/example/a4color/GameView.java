@@ -81,17 +81,32 @@ public class GameView extends View {
 
     private void setupTouchHandling() {
         touchHandler.setOnNodeSelectedListener(node -> {
-            // Show color picker with modern palette
-            colorPicker.showColorPicker(getContext(), color -> {
-                if (node.canAcceptColor(color)) {
-                    // Add color animation
-                    animateColorChange(node, color, () -> {
-                        gameState.applyColor(node, color);
-                        invalidate();
-                        checkLevelCompletion();
+            try {
+                if (colorPicker != null && getContext() != null) {
+                    colorPicker.showColorPicker(getContext(), color -> {
+                        if (node != null && node.canAcceptColor(color)) {
+                            // Animate color change
+                            ValueAnimator anim = ValueAnimator.ofArgb(node.getColor(), color);
+                            anim.setDuration(300);
+                            anim.addUpdateListener(animation -> {
+                                node.setColor((int) animation.getAnimatedValue());
+                                invalidate();
+                            });
+                            anim.start();
+
+                            // Check level completion after animation
+                            anim.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    checkLevelCompletion();
+                                }
+                            });
+                        }
                     });
                 }
-            });
+            } catch (Exception e) {
+                Log.e("GameView", "Color picker error", e);
+            }
         });
     }
 

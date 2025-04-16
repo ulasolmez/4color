@@ -43,6 +43,7 @@ public abstract class BaseGameActivity extends AppCompatActivity
 
 
         ColorPicker colorPicker = new MaterialColorPicker();
+
         gameView = new GameView(this, gameState, colorPicker);
         gameView.setGameEventListener(this);
         setContentView(gameView);

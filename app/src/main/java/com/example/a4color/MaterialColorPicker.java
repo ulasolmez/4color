@@ -5,12 +5,14 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,65 +24,72 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class MaterialColorPicker implements ColorPicker {
     private static final int[] COLORS = {
-            Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW
+            Color.parseColor("#EF5350"),  // Red 400
+            Color.parseColor("#66BB6A"),  // Green 400
+            Color.parseColor("#42A5F5"),  // Blue 400
+            Color.parseColor("#FFEE58"),  // Yellow 400
     };
-    private static final String[] COLOR_NAMES = {"Red", "Green", "Blue", "Yellow"};
 
     @Override
     public void showColorPicker(Context context, OnColorSelectedListener listener) {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context)
-                .setTitle("Choose a color")
-                .setAdapter(new ColorGridAdapter(context, COLORS), (dialog, which) -> {
-                    if (listener != null) {
-                        listener.onColorSelected(COLORS[which]);
-                    }
-                })
-                .setNegativeButton("Cancel", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-        // Optional: Customize dialog window
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawableResource(R.drawable.dialog_background);
+        if (!(context instanceof Activity)) {
+            Log.e("ColorPicker", "Context is not an Activity");
+            return;
         }
+
+        // Create a GridView for horizontal color selection
+        GridView gridView = new GridView(context);
+        gridView.setNumColumns(COLORS.length); // Horizontal layout
+        gridView.setHorizontalSpacing(16); // 16dp between colors
+        gridView.setVerticalSpacing(16);
+        gridView.setAdapter(new ColorAdapter(context));
+
+        // Create dialog with proper theme
+        AlertDialog dialog = new AlertDialog.Builder(context, R.style.ColorPickerDialog)
+                .setView(gridView)
+                .setNegativeButton("Cancel", null)
+                .create();
+
+        // Set transparent background
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        gridView.setOnItemClickListener((parent, view, position, id) -> {
+            listener.onColorSelected(COLORS[position]);
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
-    private static class ColorGridAdapter extends BaseAdapter {
-        private final Context context;
-        private final int[] colors;
+    private class ColorAdapter extends BaseAdapter {
+        private final LayoutInflater inflater;
+        private final int itemSize;
 
-        public ColorGridAdapter(Context context, int[] colors) {
-            this.context = context;
-            this.colors = colors;
+        ColorAdapter(Context context) {
+            this.inflater = LayoutInflater.from(context);
+            this.itemSize = (int) (64 * context.getResources().getDisplayMetrics().density);
         }
 
-        @Override
-        public int getCount() { return colors.length; }
+        @Override public int getCount() { return COLORS.length; }
+        @Override public Object getItem(int pos) { return COLORS[pos]; }
+        @Override public long getItemId(int pos) { return pos; }
 
         @Override
-        public Object getItem(int position) { return colors[position]; }
+        public View getView(int pos, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.color_circle_item, parent, false);
+            }
 
-        @Override
-        public long getItemId(int position) { return position; }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            View view = convertView != null ? convertView :
-                    LayoutInflater.from(context).inflate(R.layout.color_grid_item, parent, false);
-
-            ImageView colorView = view.findViewById(R.id.colorView);
-            colorView.setBackgroundColor(colors[position]);
-
-            // Add circular shape
+            ImageView colorView = convertView.findViewById(R.id.colorCircle);
             GradientDrawable drawable = new GradientDrawable();
             drawable.setShape(GradientDrawable.OVAL);
-            drawable.setColor(colors[position]);
-            drawable.setStroke(4, Color.BLACK);
+            drawable.setColor(COLORS[pos]);
+            drawable.setStroke(4, Color.WHITE); // White border
             colorView.setBackground(drawable);
 
-            return view;
+            return convertView;
         }
     }
 }

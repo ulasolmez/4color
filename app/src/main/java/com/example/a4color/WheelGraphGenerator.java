@@ -1,45 +1,65 @@
- package com.example.a4color;
+package com.example.a4color;
 
+import android.graphics.PointF;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WheelGraphGenerator implements LevelGenerator {
-     @Override
-     public Level generateLevel(int levelNumber, int width, int height) {
-         // Calculate size based on level
-         int rimSize = 3 + levelNumber; // Minimum 4 nodes for a wheel
-         if (rimSize > 12) rimSize = 12; // Cap at 12 nodes
+    private static final float WHEEL_RADIUS_RATIO = 0.4f; // 40% of screen size
+    private static final int MIN_RIM_SIZE = 3;
+    private static final int MAX_RIM_SIZE = 12;
 
-         List<Node> nodes = new ArrayList<>();
-         List<Edge> edges = new ArrayList<>();
+    @Override
+    public Level generateLevel(int levelNumber, int width, int height) {
+        // Scale difficulty with level number
+        int rimSize = calculateRimSize(levelNumber);
 
-         float centerX = width / 2f;
-         float centerY = height / 2f;
-         float radius = Math.min(width, height) * 0.4f;
+        List<Node> nodes = createWheelNodes(rimSize, width, height);
+        List<Edge> edges = createWheelEdges(nodes, rimSize);
 
-         // 1. Create center node
-         Node center = new BasicNode(0, centerX, centerY);
-         nodes.add(center);
+        return new BasicLevel(nodes, edges);
+    }
 
-         // 2. Create rim nodes in a circle
-         for (int i = 1; i <= rimSize; i++) {
-             double angle = 2 * Math.PI * (i-1) / rimSize;
-             float x = centerX + (float)(radius * Math.cos(angle));
-             float y = centerY + (float)(radius * Math.sin(angle));
-             Node rimNode = new BasicNode(i, x, y);
-             nodes.add(rimNode);
+    private int calculateRimSize(int levelNumber) {
+        int rimSize = MIN_RIM_SIZE + levelNumber;
+        return Math.min(rimSize, MAX_RIM_SIZE);
+    }
 
-             // Connect to center (spokes)
-             edges.add(new BasicEdge(center, rimNode));
-         }
+    private List<Node> createWheelNodes(int rimSize, int width, int height) {
+        List<Node> nodes = new ArrayList<>();
+        PointF center = new PointF(width / 2f, height / 2f);
+        float radius = Math.min(width, height) * WHEEL_RADIUS_RATIO;
 
-         // 3. Connect rim nodes in a cycle
-         for (int i = 1; i <= rimSize; i++) {
-             Node current = nodes.get(i);
-             Node next = nodes.get((i % rimSize) + 1); // Wraps around
-             edges.add(new BasicEdge(current, next));
-         }
+        // Create center node
+        nodes.add(new BasicNode(0, center.x, center.y));
 
-         return new BasicLevel(nodes, edges);
-     }
- }
+        // Create rim nodes
+        for (int i = 1; i <= rimSize; i++) {
+            double angle = 2 * Math.PI * (i-1) / rimSize;
+            float x = center.x + (float)(radius * Math.cos(angle));
+            float y = center.y + (float)(radius * Math.sin(angle));
+            nodes.add(new BasicNode(i, x, y));
+        }
+
+        return nodes;
+    }
+
+    private List<Edge> createWheelEdges(List<Node> nodes, int rimSize) {
+        List<Edge> edges = new ArrayList<>();
+        Node center = nodes.get(0);
+
+        // Connect spokes (center to each rim node)
+        for (int i = 1; i <= rimSize; i++) {
+            edges.add(new BasicEdge(center, nodes.get(i)));
+        }
+
+        // Connect rim nodes in a cycle
+        for (int i = 1; i <= rimSize; i++) {
+            Node current = nodes.get(i);
+            Node next = nodes.get((i % rimSize) + 1); // Wraps around
+            edges.add(new BasicEdge(current, next));
+        }
+
+        return edges;
+    }
+}

@@ -19,11 +19,11 @@ public class GraphRenderer {
         edgePaint.setStrokeWidth(EDGE_STROKE_WIDTH);
     }
 
-    public void drawGraph(Canvas canvas, Graph graph) {
+    public void drawGraph(Canvas canvas, Level level) {
         canvas.drawColor(Color.rgb(255, 255, 204)); // Light yellow background
 
         // Draw edges first
-        for (Edge edge : graph.getEdges()) {
+        for (Edge edge : level.getEdges()) {
             canvas.drawLine(
                     edge.getStart().getPosition().x,
                     edge.getStart().getPosition().y,
@@ -34,7 +34,7 @@ public class GraphRenderer {
         }
 
         // Draw nodes
-        for (Node node : graph.getNodes()) {
+        for (Node node : level.getNodes()) {
             // Fill
             nodePaint.setColor(node.getColor());
             nodePaint.setStyle(Paint.Style.FILL);
@@ -57,5 +57,6 @@ public class GraphRenderer {
             );
         }
     }
+
 }
 

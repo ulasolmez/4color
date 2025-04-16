@@ -13,12 +13,12 @@ import java.util.Set;
 public class LevelManager {
     private final List<Level> levels = new ArrayList<>();
     private int currentLevelIndex = 0;
-    private final LevelGenerator levelGenerator;
     private final int screenWidth;
     private final int screenHeight;
+    private final LevelGenerator levelGenerator;
 
-    public LevelManager(LevelGenerator generator, int width, int height) {
-        this.levelGenerator = generator;
+    public LevelManager(LevelGenerator levelGenerator, int width, int height) {
+        this.levelGenerator = levelGenerator;
         this.screenWidth = width;
         this.screenHeight = height;
     }

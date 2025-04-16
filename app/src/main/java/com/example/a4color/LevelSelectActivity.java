@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.GridLayout;
 
@@ -81,8 +82,15 @@ public class LevelSelectActivity extends AppCompatActivity {
     }
 
     private void startLevel(int levelNumber) {
-        startActivity(new Intent(this, GraphColoringActivity.class)
-                .putExtra("LEVEL_NUMBER", levelNumber));
+        Log.d("LevelSelect", "Starting level " + levelNumber);
+
+        Intent intent = new Intent(this, GraphColoringActivity.class);
+        intent.putExtra("LEVEL_NUMBER", levelNumber);
+
+        // Add flags to ensure clean activity launch
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        startActivity(intent);
     }
 
     private int dpToPx(int dp) {

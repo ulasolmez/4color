@@ -8,4 +8,5 @@
     <string name="color_blue">Blue color</string>
     <string name="color_yellow">Yellow color</string>
     <string name="undo">Undo</string>
+    <string name="color_option">Color option</string>
 </resources>

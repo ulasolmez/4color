@@ -10,8 +10,8 @@ public class BasicLevel implements Level {
     private final List<Edge> edges;
 
     public BasicLevel(List<Node> nodes, List<Edge> edges) {
-        this.nodes = new ArrayList<>(nodes); // Defensive copy
-        this.edges = new ArrayList<>(edges); // Defensive copy
+        this.nodes = nodes != null ? new ArrayList<>(nodes) : new ArrayList<>();
+        this.edges = edges != null ? new ArrayList<>(edges) : new ArrayList<>();
         setupNeighbors();
     }
 

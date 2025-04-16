@@ -6,12 +6,12 @@ public class GameState {
     private Level currentLevel;
     private boolean isCompleted;
 
-    public GameState(Level initialLevel) {
+    public GameState(Level initialLevel) {  // Accept Level instead of Graph
         this.currentLevel = initialLevel;
     }
 
-    public Graph getCurrentLevel() {
-        return (Graph) currentLevel;
+    public Level getCurrentLevel() {  // Return Level instead of Graph
+        return currentLevel;
     }
 
     public void setCurrentLevel(Level level) {

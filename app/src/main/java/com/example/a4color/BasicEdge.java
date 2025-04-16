@@ -1,6 +1,6 @@
 package com.example.a4color;
 
-public class BasicEdge {
+public class BasicEdge implements Edge {
     private final Node start;
     private final Node end;
 

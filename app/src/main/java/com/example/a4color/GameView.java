@@ -1,11 +1,19 @@
 package com.example.a4color;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
+
+import java.util.Objects;
 
 public class GameView extends View {
     private GraphRenderer renderer;
@@ -30,8 +38,13 @@ public class GameView extends View {
         init(attrs);
     }
 
-    public GameView(BaseGameActivity context, GameState gameState, ColorPicker colorPicker) {
+    public GameView(Context context, GameState gameState, ColorPicker colorPicker) {
         super(context);
+        this.gameState = gameState;
+        this.colorPicker = colorPicker;
+        this.renderer = new GraphRenderer();
+        this.touchHandler = new GraphTouchHandler();
+        setupTouchHandling();
     }
 
     private void init(@Nullable AttributeSet attrs) {
@@ -55,30 +68,55 @@ public class GameView extends View {
         this.gameEventListener = listener;
     }
 
+    private void checkLevelCompletion() {
+        if (gameState != null && gameState.getCurrentLevel() != null) {
+            boolean isComplete = gameState.getCurrentLevel().isColoredCorrectly();
+            Log.d("GameView", "Level completion check: " + isComplete);
+
+            if (isComplete && gameEventListener != null) {
+                gameEventListener.onLevelCompleted();
+            }
+        }
+    }
+
     private void setupTouchHandling() {
         touchHandler.setOnNodeSelectedListener(node -> {
-            if (colorPicker != null) {
-                colorPicker.showColorPicker(getContext(), color -> {
-                    if (gameState != null && node.canAcceptColor(color)) {
+            // Show color picker with modern palette
+            colorPicker.showColorPicker(getContext(), color -> {
+                if (node.canAcceptColor(color)) {
+                    // Add color animation
+                    animateColorChange(node, color, () -> {
                         gameState.applyColor(node, color);
                         invalidate();
+                        checkLevelCompletion();
+                    });
+                }
+            });
+        });
+    }
 
-                        if (gameState.checkWinCondition() && gameEventListener != null) {
-                            gameEventListener.onLevelCompleted();
-                        }
-                    }
-                });
+    private void animateColorChange(Node node, int newColor, Runnable onComplete) {
+        ValueAnimator anim = ValueAnimator.ofArgb(node.getColor(), newColor);
+        anim.setDuration(300);
+        anim.addUpdateListener(animation -> {
+            node.setColor((int) animation.getAnimatedValue());
+            invalidate();
+        });
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                onComplete.run();
             }
         });
+        anim.start();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (gameState != null && gameState.getCurrentLevel() != null) {
-            renderer.drawGraph(canvas, gameState.getCurrentLevel());
-        }
+        renderer.drawGraph(canvas, gameState.getCurrentLevel());
     }
+
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {

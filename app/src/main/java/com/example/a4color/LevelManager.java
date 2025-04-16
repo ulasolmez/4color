@@ -11,175 +11,51 @@ import java.util.Random;
 import java.util.Set;
 
 public class LevelManager {
-
-    private static final int[] NODE_COUNTS = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    private static final float[] EDGE_DENSITIES = {1.2f, 1.3f, 1.4f, 1.5f, 1.6f, 1.7f,
-            1.8f, 1.9f, 2.0f, 2.1f, 2.2f, 2.3f};
-    private static List<Level> levels;
-    private static int currentLevelIndex = 0;
+    private final List<Level> levels = new ArrayList<>();
+    private int currentLevelIndex = 0;
+    private final LevelGenerator levelGenerator;
     private final int screenWidth;
     private final int screenHeight;
-    private Map<String, LevelGenerator> generators;
-    private String currentGeneratorType = "progressive";
 
-    public LevelManager(int width, int height) {
+    public LevelManager(LevelGenerator generator, int width, int height) {
+        this.levelGenerator = generator;
         this.screenWidth = width;
         this.screenHeight = height;
-        levels = new ArrayList<>();
-        initializeGenerators();
-        generateLevels();
     }
 
-    private void initializeGenerators() {
-
-        generators = new HashMap<>();
-        generators.put("progressive", new ProgressiveGraphGenerator());
-        generators.put("wheel", new WheelGraphGenerator());
-        generators.put("triangular", new TriangularGraphGenerator());
-        generators.put("nested", new NestedTrianglesGenerator());
-
-    }
-
-    void setGeneratorType(String generatorType) {
-
-        if (generators.containsKey(generatorType)) {
-            this.currentGeneratorType = generatorType;
-            generateLevels();
+    public void generateLevels(int count) {
+        levels.clear();
+        for (int i = 0; i < count; i++) {
+            levels.add(levelGenerator.generateLevel(i, screenWidth, screenHeight));
         }
-
     }
-    public static int getCurrentLevelIndex() {
+
+    public Level getCurrentLevel() {
+        if (levels.isEmpty()) return null;
+        return levels.get(currentLevelIndex);
+    }
+
+    public int getCurrentLevelIndex() {
         return currentLevelIndex;
     }
-    public static void setCurrentLevel(int levelIndex) {
+
+    public boolean hasNextLevel() {
+        return currentLevelIndex < levels.size() - 1;
+    }
+
+    public void nextLevel() {
+        if (hasNextLevel()) {
+            currentLevelIndex++;
+        }
+    }
+
+    public void setLevel(int levelIndex) {
         if (levelIndex >= 0 && levelIndex < levels.size()) {
             currentLevelIndex = levelIndex;
         }
     }
 
-    private void generateLevels() {
-        levels.clear();
-        LevelGenerator generator = generators.get(currentGeneratorType);
-
-        for (int i = 0; i < 40; i++) {
-            assert generator != null;
-            levels.add(generator.generateLevel(i, screenWidth, screenHeight));
-        }
+    public int getLevelCount() {
+        return levels.size();
     }
-
-    private Level generateLevel(int levelNumber) {
-        int levelIndex = Math.min(levelNumber, NODE_COUNTS.length - 1);
-        int nodeCount = NODE_COUNTS[levelIndex];
-        float edgeDensity = EDGE_DENSITIES[levelIndex];
-
-        List<Node> nodes = createCircularLayout(nodeCount);
-        List<Edge> edges = createEdges(nodes, (int)(nodeCount * edgeDensity));
-
-        return new Level(nodes, edges);
-    }
-    private List<Node> createCircularLayout(int nodeCount) {
-        List<Node> nodes = new ArrayList<>();
-        float centerX = screenWidth / 2f;
-        float centerY = screenHeight / 2f;
-        float radius = Math.min(screenWidth, screenHeight) * 0.4f;
-
-        for (int i = 0; i < nodeCount; i++) {
-            double angle = 2 * Math.PI * i / nodeCount;
-            float x = centerX + (float)(radius * Math.cos(angle));
-            float y = centerY + (float)(radius * Math.sin(angle));
-
-            // Ensure no duplicate positions
-            PointF newPos = new PointF(x, y);
-            if (!positionExists(nodes, newPos)) {
-                nodes.add(new Node(i, x, y));
-            }
-        }
-        return nodes;
-    }
-    private boolean positionExists(List<Node> nodes, PointF position) {
-        final float TOLERANCE = 1.0f; // pixels
-        for (Node node : nodes) {
-            if (Math.abs(node.getPosition().x - position.x) < TOLERANCE &&
-                    Math.abs(node.getPosition().y - position.y) < TOLERANCE) {
-                return true;
-            }
-        }
-        return false;
-    }
-    private List<Edge> createEdges(List<Node> nodes, int targetEdges) {
-        List<Edge> edges = new ArrayList<>();
-        Random random = new Random();
-
-        // Ensure graph is connected
-        for (int i = 1; i < nodes.size(); i++) {
-            edges.add(new Edge(nodes.get(i-1), nodes.get(i)));
-        }
-
-        // Add remaining edges randomly
-        while (edges.size() < targetEdges) {
-            Node a = nodes.get(random.nextInt(nodes.size()));
-            Node b = nodes.get(random.nextInt(nodes.size()));
-
-            if (a == b || hasEdge(edges, a, b)) continue;
-
-            edges.add(new Edge(a, b));
-        }
-        return edges;
-    }
-
-    private boolean hasEdge(List<Edge> edges, Node a, Node b) {
-        for (Edge e : edges) {
-            if ((e.getStart() == a && e.getEnd() == b) ||
-                    (e.getStart() == b && e.getEnd() == a)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Keep your existing methods
-    public static Level getCurrentLevel() {
-        return levels.get(currentLevelIndex);
-    }
-
-    public static void nextLevel() {
-        if (currentLevelIndex < levels.size() - 1) {
-            currentLevelIndex++;
-        }
-    }
-
-    public void reset() {
-        currentLevelIndex = 0;
-    }
-   /*
-
-    private static List<Level> levels;
-    private static int currentLevel = 0;
-    private int screenWidth, screenHeight;
-
-    public LevelManager(int width, int height) {
-        generateLevels(width, height);
-    }
-
-    public void setCurrentLevel(int level) {
-        this.currentLevel = Math.min(Math.max(level, 0), levels.size() - 1);
-    }
-
-    private void generateLevels(int width, int height) {
-        levels = new ArrayList<>();
-        // Generate increasingly complex levels
-        for (int i = 0; i < 10; i++) {
-            levels.add(GraphGenerator.generatePlanarGraph(width, height));
-        }
-    }
-    public static Level getCurrentLevel() {
-        return levels.get(currentLevel);
-    }
-
-    public static void nextLevel() {
-        currentLevel = Math.min(currentLevel + 1, levels.size() - 1);
-    }
-}
-
-    */
 }

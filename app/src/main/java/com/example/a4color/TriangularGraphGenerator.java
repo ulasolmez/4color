@@ -123,7 +123,7 @@ public class TriangularGraphGenerator implements LevelGenerator {
 
     private void addEdgeIfNotExists(List<Edge> edges, Node a, Node b) {
         if (!hasEdge(edges, a, b)) {
-            edges.add(new Edge(a, b));
+            edges.add((Edge) new BasicEdge(a, b));
         }
     }
 
@@ -151,7 +151,7 @@ public class TriangularGraphGenerator implements LevelGenerator {
         Node firstNode = nodes.get(0);
         for (int i = 1; i < nodes.size(); i++) {
             if (!connected[i]) {
-                edges.add(new Edge(firstNode, nodes.get(i)));
+                edges.add((Edge) new BasicEdge(firstNode, nodes.get(i)));
             }
         }
     }

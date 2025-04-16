@@ -18,7 +18,7 @@ public class WheelGraphGenerator implements LevelGenerator {
          float radius = Math.min(width, height) * 0.4f;
 
          // 1. Create center node
-         Node center = new Node(0, centerX, centerY);
+         Node center = new BasicNode(0, centerX, centerY);
          nodes.add(center);
 
          // 2. Create rim nodes in a circle
@@ -26,20 +26,20 @@ public class WheelGraphGenerator implements LevelGenerator {
              double angle = 2 * Math.PI * (i-1) / rimSize;
              float x = centerX + (float)(radius * Math.cos(angle));
              float y = centerY + (float)(radius * Math.sin(angle));
-             Node rimNode = new Node(i, x, y);
+             Node rimNode = new BasicNode(i, x, y);
              nodes.add(rimNode);
 
              // Connect to center (spokes)
-             edges.add(new Edge(center, rimNode));
+             edges.add(new BasicEdge(center, rimNode));
          }
 
          // 3. Connect rim nodes in a cycle
          for (int i = 1; i <= rimSize; i++) {
              Node current = nodes.get(i);
              Node next = nodes.get((i % rimSize) + 1); // Wraps around
-             edges.add(new Edge(current, next));
+             edges.add(new BasicEdge(current, next));
          }
 
-         return new Level(nodes, edges);
+         return new BasicLevel(nodes, edges);
      }
  }

@@ -143,4 +143,22 @@ public class GameView extends View {
     public interface GameEventListener {
         void onLevelCompleted();
     }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        // You can use these dimensions in your color picker positioning
+    }
+
+    private void showColorPicker() {
+        // Ensure we have valid dimensions
+        post(() -> {
+            if (colorPicker != null) {
+                colorPicker.showColorPicker(getContext(), color -> {
+                    // Handle color selection
+                });
+            }
+        });
+    }
+
 }

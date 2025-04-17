@@ -34,14 +34,12 @@ public class BasicLevel implements Level {
 
     @Override
     public boolean isColoredCorrectly() {
-        // Check all nodes are colored (none are white)
         for (Node node : nodes) {
             if (node.getColor() == Color.WHITE) {
                 return false;
             }
         }
 
-        // Check no adjacent nodes have same color
         for (Edge edge : edges) {
             if (edge.getStart().getColor() == edge.getEnd().getColor()) {
                 return false;
@@ -51,7 +49,6 @@ public class BasicLevel implements Level {
         return true;
     }
 
-    // Optional helper methods
     public void resetColors() {
         for (Node node : nodes) {
             node.setColor(Color.WHITE);

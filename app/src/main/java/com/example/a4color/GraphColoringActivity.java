@@ -21,7 +21,7 @@ public class GraphColoringActivity extends BaseGameActivity implements GameView.
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-            updateLevelTitle(); // Now inherited from BaseGameActivity
+            updateLevelTitle();
         }
     }
 

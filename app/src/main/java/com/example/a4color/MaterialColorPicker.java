@@ -37,7 +37,6 @@ public class MaterialColorPicker implements ColorPicker {
     public void showColorPicker(Context context, OnColorSelectedListener listener) {
         if (!(context instanceof Activity)) return;
 
-        // Create a popup window instead of dialog
         PopupWindow popup = new PopupWindow(context);
         popup.setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
         popup.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -45,20 +44,16 @@ public class MaterialColorPicker implements ColorPicker {
         popup.setFocusable(true);
         popup.setOutsideTouchable(true);
 
-        // Create horizontal color grid
         GridView gridView = new GridView(context);
         gridView.setNumColumns(COLORS.length);
         gridView.setAdapter(new ColorAdapter(context));
 
-        // Calculate proper spacing
         int spacing = calculateSpacing(context);
         gridView.setHorizontalSpacing(spacing);
         gridView.setVerticalSpacing(16);
 
-        // Set popup content
         popup.setContentView(gridView);
 
-        // Position above bottom (with 20% margin from bottom)
         View anchor = ((Activity)context).getWindow().getDecorView();
         popup.showAtLocation(anchor, Gravity.TOP, 0, (int)(anchor.getHeight() * 0.2));
 
@@ -74,11 +69,9 @@ public class MaterialColorPicker implements ColorPicker {
         int numColors = COLORS.length;
         int colorSize = (int)(64 * metrics.density); // 64dp per color
 
-        // Calculate spacing to center the colors
         int totalColorWidth = numColors * colorSize;
         int remainingSpace = screenWidth - totalColorWidth;
 
-        // Distribute remaining space equally between colors
         return Math.max(16, remainingSpace / (numColors + 1)); // Minimum 16dp
     }
 

@@ -24,12 +24,12 @@ public class LevelSelectActivity extends AppCompatActivity {
         setContentView(R.layout.activity_level_select);
 
         GridLayout levelGrid = findViewById(R.id.levelGrid);
-        levelGrid.setColumnCount(5); // 5 columns
+        levelGrid.setColumnCount(5);
 
         for (int i = 1; i <= TOTAL_LEVELS; i++) {
             Button levelButton = new Button(this);
-            final int levelNumber = i; // Create final copy for lambda
-            // 1. Assign colors from our 4-color palette
+            final int levelNumber = i;
+
             int[] buttonColors = {
                     R.color.level_button_red,
                     R.color.level_button_green,
@@ -38,20 +38,18 @@ public class LevelSelectActivity extends AppCompatActivity {
             };
             int colorResId = buttonColors[i % 4];
 
-            // 2. Create a background drawable with rounded corners
             GradientDrawable bgDrawable = new GradientDrawable();
             bgDrawable.setShape(GradientDrawable.RECTANGLE);
-            bgDrawable.setCornerRadius(dpToPx(8)); // 8dp rounded corners
+            bgDrawable.setCornerRadius(dpToPx(8));
             bgDrawable.setColor(ContextCompat.getColor(this, colorResId));
 
-            // 3. Combine with ripple effect
             RippleDrawable rippleDrawable = new RippleDrawable(
                     ColorStateList.valueOf(Color.parseColor("#80FFFFFF")), // Ripple color
-                    bgDrawable, // Background
-                    null // No mask
+                    bgDrawable,
+                    null
             );
 
-            // 4. Apply the styling
+
             levelButton.setBackground(rippleDrawable);
             levelButton.setTextColor(i % 4 == 2 ? // Blue background needs white text
                     ContextCompat.getColor(this, R.color.text_primary_light) :
@@ -62,7 +60,6 @@ public class LevelSelectActivity extends AppCompatActivity {
             levelButton.setAllCaps(false);
             levelButton.setElevation(dpToPx(2));
 
-            // 5. Layout params (unchanged)
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             params.width = dpToPx(60);
             params.height = dpToPx(60);
@@ -70,11 +67,9 @@ public class LevelSelectActivity extends AppCompatActivity {
 
             levelGrid.addView(levelButton, params);
 
-            // Style and text (unchanged)
             styleLevelButton(levelButton, levelNumber);
             levelButton.setText(String.valueOf(levelNumber));
 
-            // Use the final copy in the lambda
             levelButton.setOnClickListener(v -> startLevel(levelNumber));
 
 

@@ -22,7 +22,7 @@ public class GraphRenderer {
     public void drawGraph(Canvas canvas, Level level) {
         canvas.drawColor(Color.rgb(255, 255, 204)); // Light yellow background
 
-        // Draw edges first
+
         for (Edge edge : level.getEdges()) {
             canvas.drawLine(
                     edge.getStart().getPosition().x,

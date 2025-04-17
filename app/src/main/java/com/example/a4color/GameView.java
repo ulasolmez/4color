@@ -22,7 +22,7 @@ public class GameView extends View {
     private ColorPicker colorPicker;
     private GameEventListener gameEventListener;
 
-    // Constructors
+
     public GameView(Context context) {
         super(context);
         init(null);
@@ -54,7 +54,6 @@ public class GameView extends View {
         setupTouchHandling();
     }
 
-    // Public methods to set dependencies
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
         invalidate();
